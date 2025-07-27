@@ -1,0 +1,36 @@
+{
+    "name": "V2V Communication System",
+    "short_name": "V2V System",
+    "description": "Vehicle-to-Vehicle Communication System with real-time monitoring and alerts",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#007BFF",
+    "theme_color": "#007BFF",
+    "icons": [
+      {
+        "src": "/icon-192x192.png",
+        "sizes": "192x192",
+        "type": "image/png"
+      },
+      {
+        "src": "/icon-512x512.png",
+        "sizes": "512x512",
+        "type": "image/png"
+      }
+    ],
+    "orientation": "any",
+    "scope": "/",
+    "prefer_related_applications": false,
+    "related_applications": [],
+    "features": [
+        "Notification Center",
+        "Real-time Messaging",
+        "Vehicle Tracking",
+        "Weather Updates"
+    ],
+    "categories": [
+        "transportation",
+        "utilities",
+        "productivity"
+    ]
+  }

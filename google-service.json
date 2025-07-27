@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "59064909707",
+    "project_id": "v2v-communication-e2e49",
+    "storage_bucket": "v2v-communication-e2e49.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:59064909707:android:8f3d776e6cb16c1073f98e",
+        "android_client_info": {
+          "package_name": "v2v.communication"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD8IDcaa9OHPaMto134CI6c1eTrCiaCOks"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

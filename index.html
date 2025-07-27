@@ -1,0 +1,1605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>V2V Communication System</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9fafb;
+            color: #333;
+        }
+
+        header {
+            background: linear-gradient(90deg, #007BFF, #0056b3);
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            flex-wrap: wrap;
+        }
+
+        header h1 {
+            font-size: 1.8em;
+            margin: 0;
+        }
+
+        .search-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .search-container input {
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+            transition: all 0.3s ease;
+            width: 250px;
+        }
+
+        .search-container input:focus {
+            border-color: #007BFF;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+
+        .search-container button {
+            padding: 10px 20px;
+            background-color: #0056b3;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .search-container button:hover {
+            background-color: #003d7a;
+            transform: scale(1.05);
+        }
+
+        #map {
+            height: 500px;
+            width: 100%;
+            margin: 20px auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .vehicle-data {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 20px auto;
+            background: linear-gradient(135deg, #ffffff, #f0f4f8);
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        th {
+            background-color: #007BFF;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        tr:hover {
+            background-color: #e9f5ff;
+            transition: background-color 0.3s ease;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            position: relative;
+        }
+
+        .user-menu {
+            position: relative;
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            min-width: 200px;
+            z-index: 1000;
+            margin-top: 10px;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+        }
+
+        .dropdown-item {
+            padding: 12px 20px;
+            color: #333;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .dropdown-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .dropdown-item i {
+            font-size: 18px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .dropdown-divider {
+            height: 1px;
+            background-color: #eee;
+            margin: 8px 0;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: #dc3545;
+            color: white;
+            border-radius: 50%;
+            padding: 4px 8px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .logout-btn {
+            padding: 8px 20px;
+            background-color: transparent;
+            color: white;
+            border: 2px solid white;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .user-info {
+            color: white;
+            margin-right: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .last-login {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        @media (max-width: 768px) {
+            header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .search-container {
+                margin-top: 10px;
+                width: 100%;
+            }
+
+            .search-container input {
+                width: 100%;
+            }
+
+            .auth-buttons {
+                margin-top: 10px;
+                width: 100%;
+                justify-content: center;
+            }
+
+            .user-info {
+                display: none;
+            }
+        }
+
+        /* Dashboard Widgets Styles */
+        .dashboard-widgets {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .widget {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .widget-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .widget-header h2 {
+            margin: 0;
+            font-size: 1.2em;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .widget-content {
+            color: #666;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #007BFF;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .traffic-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .traffic-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .traffic-item:last-child {
+            border-bottom: none;
+        }
+
+        .traffic-severity {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .severity-high {
+            background-color: #dc3545;
+        }
+
+        .severity-medium {
+            background-color: #ffc107;
+        }
+
+        .severity-low {
+            background-color: #28a745;
+        }
+
+        .weather-info {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .weather-main {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .weather-icon {
+            font-size: 2.5em;
+            color: #007BFF;
+        }
+
+        .weather-temp {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .weather-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            font-size: 0.9em;
+        }
+
+        .weather-detail {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Dark mode additions */
+        .dark-mode .widget {
+            background: #2d2d2d;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
+        .dark-mode .widget-header h2 {
+            color: #fff;
+        }
+
+        .dark-mode .stat-item {
+            background: #1a1a1a;
+        }
+
+        .dark-mode .stat-label {
+            color: #aaa;
+        }
+
+        .dark-mode .traffic-item {
+            border-bottom-color: #444;
+        }
+
+        .dark-mode .widget-content {
+            color: #aaa;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-widgets {
+                grid-template-columns: 1fr;
+                padding: 10px;
+            }
+        }
+
+        /* Notification Center Styles */
+        .notification-center {
+            position: fixed;
+            right: -400px;
+            top: 0;
+            width: 400px;
+            height: 100vh;
+            background: white;
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+            transition: right 0.3s ease;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .notification-center.show {
+            right: 0;
+        }
+
+        .notification-header {
+            padding: 20px;
+            background: #007BFF;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notification-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .notification-tabs {
+            display: flex;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 15px;
+        }
+
+        .notification-tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+
+        .notification-tab.active {
+            border-bottom-color: #007BFF;
+            color: #007BFF;
+        }
+
+        .notification-item {
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .notification-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .notification-item.unread {
+            background-color: #f0f7ff;
+        }
+
+        .notification-item .time {
+            font-size: 0.8em;
+            color: #666;
+        }
+
+        .notification-badge {
+            background-color: #dc3545;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 0.8em;
+            margin-left: 5px;
+        }
+
+        /* Messaging System Styles */
+        .messaging-system {
+            position: fixed;
+            right: -400px;
+            bottom: 0;
+            width: 400px;
+            height: 500px;
+            background: white;
+            box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+            transition: right 0.3s ease;
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            border-top-left-radius: 10px;
+        }
+
+        .messaging-system.show {
+            right: 0;
+        }
+
+        .chat-header {
+            padding: 15px;
+            background: #007BFF;
+            color: white;
+            border-top-left-radius: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-message {
+            max-width: 80%;
+            padding: 10px 15px;
+            margin: 5px 0;
+            border-radius: 15px;
+            word-wrap: break-word;
+        }
+
+        .chat-message.sent {
+            background-color: #007BFF;
+            color: white;
+            align-self: flex-end;
+        }
+
+        .chat-message.received {
+            background-color: #f0f0f0;
+            align-self: flex-start;
+        }
+
+        .chat-input {
+            padding: 15px;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            outline: none;
+        }
+
+        .chat-input button {
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        /* Mobile Optimizations */
+        @media (max-width: 768px) {
+            .notification-center,
+            .messaging-system {
+                width: 100%;
+                right: -100%;
+            }
+
+            .dashboard-widgets {
+                padding: 10px;
+            }
+
+            .widget {
+                margin-bottom: 15px;
+            }
+
+            .stat-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .weather-info {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .chat-input {
+                padding: 10px;
+            }
+
+            .notification-tab {
+                padding: 10px;
+            }
+        }
+
+        /* Dark Mode Additions */
+        .dark-mode .notification-center,
+        .dark-mode .messaging-system {
+            background: #2d2d2d;
+            color: #fff;
+        }
+
+        .dark-mode .notification-item {
+            border-bottom-color: #444;
+        }
+
+        .dark-mode .notification-item:hover {
+            background-color: #3d3d3d;
+        }
+
+        .dark-mode .notification-item.unread {
+            background-color: #1a3a5c;
+        }
+
+        .dark-mode .chat-message.received {
+            background-color: #3d3d3d;
+        }
+
+        .dark-mode .chat-input {
+            border-top-color: #444;
+        }
+
+        .dark-mode .chat-input input {
+            background-color: #1a1a1a;
+            border-color: #444;
+            color: #fff;
+        }
+
+        /* Enhanced Messaging System Styles */
+        .chat-sidebar {
+            width: 250px;
+            position: fixed;
+            right: -250px;
+            top: 0;
+            height: 100vh;
+            background: white;
+            border-left: 1px solid #eee;
+            transition: right 0.3s ease;
+            z-index: 998;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-sidebar.show {
+            right: 400px;
+        }
+
+        .chat-contacts {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .contact-item {
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: background-color 0.3s;
+        }
+
+        .contact-item:hover {
+            background-color: #f8f9fa;
+        }
+
+        .contact-item.active {
+            background-color: #e3f2fd;
+        }
+
+        .contact-item.emergency {
+            background-color: #ffebee;
+            border-left: 4px solid #dc3545;
+        }
+
+        .contact-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #007BFF;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+        }
+
+        .contact-info {
+            flex: 1;
+        }
+
+        .contact-name {
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+
+        .contact-status {
+            font-size: 0.8em;
+            color: #666;
+        }
+
+        .contact-status.online {
+            color: #28a745;
+        }
+
+        .contact-badge {
+            background-color: #dc3545;
+            color: white;
+            border-radius: 50%;
+            padding: 2px 6px;
+            font-size: 0.8em;
+        }
+
+        .broadcast-message {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .broadcast-message.emergency {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
+        .emergency-alert {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #dc3545;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translate(-50%, -100%);
+            }
+            to {
+                transform: translate(-50%, 0);
+            }
+        }
+
+        .dark-mode .chat-sidebar {
+            background: #2d2d2d;
+            border-color: #444;
+        }
+
+        .dark-mode .contact-item:hover {
+            background-color: #3d3d3d;
+        }
+
+        .dark-mode .contact-item.active {
+            background-color: #1a3a5c;
+        }
+
+        .dark-mode .contact-status {
+            color: #aaa;
+        }
+
+        .dark-mode .broadcast-message {
+            background-color: #2d2d2d;
+            border-color: #444;
+        }
+
+        @media (max-width: 768px) {
+            .chat-sidebar {
+                width: 100%;
+                right: -100%;
+            }
+
+            .chat-sidebar.show {
+                right: 0;
+            }
+
+            .messaging-system.show {
+                width: 100%;
+                right: 0;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <h1>V2V Communication System</h1>
+        <div class="auth-buttons">
+            <div class="user-menu" onclick="toggleDropdown()">
+                <img id="userAvatar" src="https://via.placeholder.com/40" alt="User Avatar" class="user-avatar">
+                <span class="user-info" id="userInfo"></span>
+                <div class="dropdown-menu" id="dropdownMenu">
+                    <a href="profile.html" class="dropdown-item">
+                        <i class="fas fa-user"></i> My Profile
+                    </a>
+                    <a href="#" class="dropdown-item" onclick="toggleNotifications()">
+                        <i class="fas fa-bell"></i> Notifications
+                        <span class="notification-badge" id="notificationBadge">3</span>
+                    </a>
+                    <a href="#" class="dropdown-item" onclick="toggleDarkMode()">
+                        <i class="fas fa-moon"></i> Dark Mode
+                    </a>
+                    <div class="dropdown-divider"></div>
+                    <a href="#" class="dropdown-item" onclick="handleLogout()">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="search-container">
+            <input type="text" id="searchInput" placeholder="Search for a city (e.g., San Francisco)">
+            <button onclick="searchLocation()">Search</button>
+        </div>
+    </header>
+    <div id="map"></div>
+
+    <!-- Dashboard Widgets Section -->
+    <div class="dashboard-widgets">
+        <!-- Vehicle Statistics Widget -->
+        <div class="widget">
+            <div class="widget-header">
+                <h2><i class="fas fa-car"></i> Vehicle Statistics</h2>
+                <i class="fas fa-sync-alt" onclick="refreshStats()" style="cursor: pointer;"></i>
+            </div>
+            <div class="widget-content">
+                <div class="stat-grid">
+                    <div class="stat-item">
+                        <div class="stat-value" id="activeVehicles">0</div>
+                        <div class="stat-label">Active Vehicles</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="avgSpeed">0</div>
+                        <div class="stat-label">Avg Speed (km/h)</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="alertCount">0</div>
+                        <div class="stat-label">Active Alerts</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-value" id="connectedVehicles">0</div>
+                        <div class="stat-label">Connected Vehicles</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Traffic Updates Widget -->
+        <div class="widget">
+            <div class="widget-header">
+                <h2><i class="fas fa-traffic-light"></i> Traffic Updates</h2>
+                <i class="fas fa-sync-alt" onclick="refreshTraffic()" style="cursor: pointer;"></i>
+            </div>
+            <div class="widget-content">
+                <ul class="traffic-list" id="trafficList">
+                    <!-- Traffic updates will be dynamically added here -->
+                </ul>
+            </div>
+        </div>
+
+        <!-- Weather Information Widget -->
+        <div class="widget">
+            <div class="widget-header">
+                <h2><i class="fas fa-cloud-sun"></i> Weather Information</h2>
+                <i class="fas fa-sync-alt" onclick="refreshWeather()" style="cursor: pointer;"></i>
+            </div>
+            <div class="widget-content">
+                <div class="weather-info">
+                    <div class="weather-main">
+                        <i class="fas fa-sun weather-icon" id="weatherIcon"></i>
+                        <div class="weather-temp" id="temperature">--°C</div>
+                    </div>
+                    <div id="weatherDescription">Loading...</div>
+                </div>
+                <div class="weather-details">
+                    <div class="weather-detail">
+                        <i class="fas fa-tint"></i>
+                        <span id="humidity">--%</span>
+                    </div>
+                    <div class="weather-detail">
+                        <i class="fas fa-wind"></i>
+                        <span id="windSpeed">-- km/h</span>
+                    </div>
+                    <div class="weather-detail">
+                        <i class="fas fa-compress-arrows-alt"></i>
+                        <span id="pressure">-- hPa</span>
+                    </div>
+                    <div class="weather-detail">
+                        <i class="fas fa-eye"></i>
+                        <span id="visibility">-- km</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="vehicle-data">
+        <table>
+            <thead>
+                <tr>
+                    <th>Vehicle ID</th>
+                    <th>Speed (km/h)</th>
+                    <th>Condition</th>
+                    <th>Direction</th>
+                    <th>Location</th>
+                    <th>Nearby Vehicles</th>
+                    <th>Nearby Vehicles Info</th>
+                    <th>Traffic</th>
+                    <th>Accident</th>
+                </tr>
+            </thead>
+            <tbody id="vehicleTableBody">
+                <!-- Vehicle data rows will be dynamically added here -->
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Notification Center -->
+    <div class="notification-center" id="notificationCenter">
+        <div class="notification-header">
+            <h2>Notifications</h2>
+            <i class="fas fa-times" onclick="toggleNotificationCenter()" style="cursor: pointer;"></i>
+        </div>
+        <div class="notification-content">
+            <div class="notification-tabs">
+                <div class="notification-tab active" onclick="switchNotificationTab('all')">All</div>
+                <div class="notification-tab" onclick="switchNotificationTab('alerts')">Alerts</div>
+                <div class="notification-tab" onclick="switchNotificationTab('messages')">Messages</div>
+            </div>
+            <div id="notificationList">
+                <!-- Notifications will be dynamically added here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Enhanced Messaging System -->
+    <div class="chat-sidebar" id="chatSidebar">
+        <div class="notification-header">
+            <h2>Contacts</h2>
+            <i class="fas fa-times" onclick="toggleChatSidebar()" style="cursor: pointer;"></i>
+        </div>
+        <div class="chat-contacts" id="chatContacts">
+            <!-- Contacts will be dynamically added here -->
+        </div>
+    </div>
+
+    <div class="messaging-system" id="messagingSystem">
+        <div class="chat-header">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-bars" onclick="toggleChatSidebar()" style="cursor: pointer;"></i>
+                <h3 id="chatTitle">Messages</h3>
+            </div>
+            <div>
+                <i class="fas fa-exclamation-triangle" onclick="showEmergencyDialog()" style="cursor: pointer; margin-right: 15px; color: #dc3545;"></i>
+                <i class="fas fa-times" onclick="toggleMessagingSystem()" style="cursor: pointer;"></i>
+            </div>
+        </div>
+        <div class="chat-content" id="chatContent">
+            <!-- Chat messages will be dynamically added here -->
+        </div>
+        <div class="chat-input">
+            <input type="text" id="messageInput" placeholder="Type your message...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="app.js"></script> <!-- Link to external JavaScript file -->
+    <script>
+        // Authentication check
+        function checkAuth() {
+            // Check both localStorage and sessionStorage
+            const persistentUser = JSON.parse(localStorage.getItem('currentUser'));
+            const sessionUser = JSON.parse(sessionStorage.getItem('currentUser'));
+            const currentUser = persistentUser || sessionUser;
+
+            if (!currentUser) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            const userInfo = document.getElementById('userInfo');
+            const lastLogin = currentUser.lastLogin ? new Date(currentUser.lastLogin).toLocaleString() : 'First login';
+            
+            userInfo.innerHTML = `
+                <span>Welcome, ${currentUser.fullName}</span>
+                <span class="last-login">Last login: ${lastLogin}</span>
+            `;
+
+            // Load user avatar if exists
+            const userAvatar = document.getElementById('userAvatar');
+            if (currentUser.profilePicture) {
+                userAvatar.src = currentUser.profilePicture;
+            }
+
+            // Load dark mode preference
+            const isDarkMode = localStorage.getItem('darkMode') === 'true';
+            if (isDarkMode) {
+                document.body.classList.add('dark-mode');
+            }
+
+            return currentUser;
+        }
+
+        function handleLogout() {
+            // Clear both storage types
+            localStorage.removeItem('currentUser');
+            sessionStorage.removeItem('currentUser');
+            window.location.href = 'login.html';
+        }
+
+        // Check authentication when page loads
+        checkAuth();
+
+        // Periodically check authentication status (every 5 minutes)
+        setInterval(checkAuth, 300000);
+
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker.register("service-worker.js")
+            .then(() => console.log("Service Worker Registered!"))
+            .catch((error) => console.log("Service Worker Registration Failed:", error));
+        }
+
+        function toggleDropdown() {
+            const dropdown = document.getElementById('dropdownMenu');
+            dropdown.classList.toggle('show');
+        }
+
+        // Close dropdown when clicking outside
+        window.onclick = function(event) {
+            if (!event.target.matches('.user-menu') && !event.target.matches('.user-avatar')) {
+                const dropdowns = document.getElementsByClassName('dropdown-menu');
+                for (let dropdown of dropdowns) {
+                    if (dropdown.classList.contains('show')) {
+                        dropdown.classList.remove('show');
+                    }
+                }
+            }
+        }
+
+        function toggleNotifications() {
+            // Implement notifications functionality
+            alert('Notifications feature coming soon!');
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDarkMode);
+        }
+
+        // Load user data and preferences
+        function loadUserData() {
+            const currentUser = checkAuth();
+            if (!currentUser) return;
+
+            const userInfo = document.getElementById('userInfo');
+            const userAvatar = document.getElementById('userAvatar');
+            const lastLogin = currentUser.lastLogin ? new Date(currentUser.lastLogin).toLocaleString() : 'First login';
+            
+            userInfo.innerHTML = `
+                <span>Welcome, ${currentUser.fullName}</span>
+                <span class="last-login">Last login: ${lastLogin}</span>
+            `;
+
+            // Load user avatar if exists
+            if (currentUser.profilePicture) {
+                userAvatar.src = currentUser.profilePicture;
+            }
+
+            // Load dark mode preference
+            const isDarkMode = localStorage.getItem('darkMode') === 'true';
+            if (isDarkMode) {
+                document.body.classList.add('dark-mode');
+            }
+        }
+
+        // Add dark mode styles
+        const darkModeStyles = document.createElement('style');
+        darkModeStyles.textContent = `
+            .dark-mode {
+                background-color: #1a1a1a;
+                color: #ffffff;
+            }
+
+            .dark-mode .vehicle-data {
+                background: linear-gradient(135deg, #2d2d2d, #1a1a1a);
+            }
+
+            .dark-mode table {
+                color: #ffffff;
+            }
+
+            .dark-mode th {
+                background-color: #007BFF;
+            }
+
+            .dark-mode tr:hover {
+                background-color: #2d2d2d;
+            }
+
+            .dark-mode .dropdown-menu {
+                background-color: #2d2d2d;
+                border: 1px solid #444;
+            }
+
+            .dark-mode .dropdown-item {
+                color: #ffffff;
+            }
+
+            .dark-mode .dropdown-item:hover {
+                background-color: #3d3d3d;
+            }
+
+            .dark-mode .dropdown-divider {
+                background-color: #444;
+            }
+        `;
+        document.head.appendChild(darkModeStyles);
+
+        // Initialize
+        loadUserData();
+
+        // Vehicle Statistics Functions
+        function refreshStats() {
+            // Simulate real-time statistics updates
+            document.getElementById('activeVehicles').textContent = Math.floor(Math.random() * 100) + 50;
+            document.getElementById('avgSpeed').textContent = Math.floor(Math.random() * 60) + 40;
+            document.getElementById('alertCount').textContent = Math.floor(Math.random() * 10);
+            document.getElementById('connectedVehicles').textContent = Math.floor(Math.random() * 80) + 30;
+        }
+
+        // Traffic Updates Functions
+        function refreshTraffic() {
+            const trafficList = document.getElementById('trafficList');
+            trafficList.innerHTML = ''; // Clear existing items
+
+            // Simulate traffic updates
+            const updates = [
+                { severity: 'high', message: 'Accident on Main Street', time: '2 mins ago' },
+                { severity: 'medium', message: 'Heavy traffic on Highway 101', time: '5 mins ago' },
+                { severity: 'low', message: 'Road work on 5th Avenue', time: '10 mins ago' },
+                { severity: 'medium', message: 'Slow traffic on Bridge Road', time: '15 mins ago' }
+            ];
+
+            updates.forEach(update => {
+                const li = document.createElement('li');
+                li.className = 'traffic-item';
+                li.innerHTML = `
+                    <span class="traffic-severity severity-${update.severity}"></span>
+                    <div>
+                        <div>${update.message}</div>
+                        <small style="color: #666;">${update.time}</small>
+                    </div>
+                `;
+                trafficList.appendChild(li);
+            });
+        }
+
+        // Weather Information Functions
+        async function refreshWeather() {
+            try {
+                // In a real application, you would fetch this data from a weather API
+                // For demo purposes, we'll simulate weather data
+                const weather = {
+                    temp: Math.floor(Math.random() * 15) + 15,
+                    humidity: Math.floor(Math.random() * 30) + 50,
+                    windSpeed: Math.floor(Math.random() * 20) + 5,
+                    pressure: Math.floor(Math.random() * 100) + 1000,
+                    visibility: Math.floor(Math.random() * 5) + 5,
+                    description: 'Partly Cloudy'
+                };
+
+                document.getElementById('temperature').textContent = `${weather.temp}°C`;
+                document.getElementById('humidity').textContent = `${weather.humidity}%`;
+                document.getElementById('windSpeed').textContent = `${weather.windSpeed} km/h`;
+                document.getElementById('pressure').textContent = `${weather.pressure} hPa`;
+                document.getElementById('visibility').textContent = `${weather.visibility} km`;
+                document.getElementById('weatherDescription').textContent = weather.description;
+
+                // Update weather icon based on conditions
+                updateWeatherIcon(weather.description);
+            } catch (error) {
+                console.error('Error updating weather:', error);
+            }
+        }
+
+        function updateWeatherIcon(description) {
+            const icon = document.getElementById('weatherIcon');
+            icon.className = 'weather-icon fas';
+            
+            // Add appropriate weather icon based on description
+            if (description.includes('cloud')) {
+                icon.classList.add('fa-cloud');
+            } else if (description.includes('rain')) {
+                icon.classList.add('fa-cloud-rain');
+            } else if (description.includes('snow')) {
+                icon.classList.add('fa-snowflake');
+            } else {
+                icon.classList.add('fa-sun');
+            }
+        }
+
+        // Initialize dashboard widgets
+        function initializeDashboard() {
+            refreshStats();
+            refreshTraffic();
+            refreshWeather();
+
+            // Refresh data periodically
+            setInterval(refreshStats, 30000); // Every 30 seconds
+            setInterval(refreshTraffic, 60000); // Every minute
+            setInterval(refreshWeather, 300000); // Every 5 minutes
+        }
+
+        // Call initialization after page loads
+        window.addEventListener('load', initializeDashboard);
+
+        // Notification System
+        let notifications = [];
+        let unreadCount = 0;
+
+        function toggleNotificationCenter() {
+            const center = document.getElementById('notificationCenter');
+            center.classList.toggle('show');
+        }
+
+        function switchNotificationTab(tab) {
+            const tabs = document.querySelectorAll('.notification-tab');
+            tabs.forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            updateNotificationList(tab);
+        }
+
+        function updateNotificationList(filter = 'all') {
+            const list = document.getElementById('notificationList');
+            list.innerHTML = '';
+
+            const filteredNotifications = notifications.filter(n => {
+                if (filter === 'all') return true;
+                return n.type === filter;
+            });
+
+            filteredNotifications.forEach(notification => {
+                const div = document.createElement('div');
+                div.className = `notification-item ${notification.unread ? 'unread' : ''}`;
+                div.innerHTML = `
+                    <div>${notification.message}</div>
+                    <div class="time">${notification.time}</div>
+                `;
+                div.onclick = () => markNotificationRead(notification.id);
+                list.appendChild(div);
+            });
+        }
+
+        function addNotification(message, type = 'alerts') {
+            const notification = {
+                id: Date.now(),
+                message,
+                type,
+                time: new Date().toLocaleTimeString(),
+                unread: true
+            };
+            notifications.unshift(notification);
+            unreadCount++;
+            updateNotificationBadge();
+            updateNotificationList();
+
+            // Show push notification if supported
+            if (Notification.permission === "granted") {
+                new Notification("V2V Communication System", {
+                    body: message,
+                    icon: "/icon.png"
+                });
+            }
+        }
+
+        function markNotificationRead(id) {
+            const notification = notifications.find(n => n.id === id);
+            if (notification && notification.unread) {
+                notification.unread = false;
+                unreadCount--;
+                updateNotificationBadge();
+                updateNotificationList();
+            }
+        }
+
+        function updateNotificationBadge() {
+            const badge = document.getElementById('notificationBadge');
+            if (unreadCount > 0) {
+                badge.style.display = 'inline';
+                badge.textContent = unreadCount;
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        // Enhanced Messaging System
+        let activeContact = null;
+        const contacts = [
+            { id: 'chatbot', name: 'V2V Assistant', type: 'chatbot', status: 'online' },
+            { id: 'broadcast', name: 'Broadcast Channel', type: 'channel', status: 'channel' },
+            { id: 'emergency', name: 'Emergency Channel', type: 'emergency', status: 'channel' },
+            { id: 'vehicle1', name: 'Vehicle 001', type: 'vehicle', status: 'online' },
+            { id: 'vehicle2', name: 'Vehicle 002', type: 'vehicle', status: 'offline' },
+            { id: 'vehicle3', name: 'Vehicle 003', type: 'vehicle', status: 'online' },
+            { id: 'operator1', name: 'Operator John', type: 'operator', status: 'online' },
+            { id: 'operator2', name: 'Operator Sarah', type: 'operator', status: 'online' }
+        ];
+
+        function toggleChatSidebar() {
+            const sidebar = document.getElementById('chatSidebar');
+            sidebar.classList.toggle('show');
+        }
+
+        function initializeContacts() {
+            const contactsContainer = document.getElementById('chatContacts');
+            contactsContainer.innerHTML = '';
+
+            contacts.forEach(contact => {
+                const div = document.createElement('div');
+                div.className = `contact-item ${contact.type === 'emergency' ? 'emergency' : ''}`;
+                div.onclick = () => selectContact(contact);
+
+                const icon = getContactIcon(contact.type);
+                div.innerHTML = `
+                    <div class="contact-avatar">
+                        <i class="fas ${icon}"></i>
+                    </div>
+                    <div class="contact-info">
+                        <div class="contact-name">${contact.name}</div>
+                        <div class="contact-status ${contact.status === 'online' ? 'online' : ''}">
+                            ${contact.status === 'channel' ? '' : contact.status}
+                        </div>
+                    </div>
+                `;
+
+                contactsContainer.appendChild(div);
+            });
+        }
+
+        function getContactIcon(type) {
+            switch(type) {
+                case 'chatbot': return 'fa-robot';
+                case 'channel': return 'fa-users';
+                case 'emergency': return 'fa-exclamation-triangle';
+                case 'vehicle': return 'fa-car';
+                case 'operator': return 'fa-headset';
+                default: return 'fa-user';
+            }
+        }
+
+        function selectContact(contact) {
+            activeContact = contact;
+            document.getElementById('chatTitle').textContent = contact.name;
+            document.getElementById('chatContent').innerHTML = '';
+            
+            // Add welcome message
+            if (contact.type === 'chatbot') {
+                addMessage('Hello! I\'m your V2V Assistant. How can I help you today?', 'bot');
+                showChatbotSuggestions([
+                    'Vehicle status',
+                    'Traffic info',
+                    'Weather updates',
+                    'Emergency help'
+                ]);
+            } else if (contact.type === 'emergency') {
+                addMessage('This is an emergency channel. All messages here are treated as high priority.', 'system');
+            } else if (contact.type === 'channel') {
+                addMessage('This is a broadcast channel. Messages here will be sent to all users.', 'system');
+            } else {
+                addMessage(`Connected to ${contact.name}`, 'system');
+            }
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            
+            if (message && activeContact) {
+                addMessage(message, 'sent');
+                input.value = '';
+                
+                // Simulate response based on contact type
+                if (activeContact.type === 'chatbot') {
+                    showTypingIndicator();
+                    setTimeout(() => {
+                        hideTypingIndicator();
+                        processChatbotMessage(message);
+                    }, 1500);
+                } else if (activeContact.type === 'emergency') {
+                    setTimeout(() => {
+                        addMessage('Emergency response team notified. Stand by for instructions.', 'received');
+                        showEmergencyAlert('Emergency services have been notified');
+                    }, 1000);
+                } else if (activeContact.type === 'channel') {
+                    setTimeout(() => {
+                        addMessage('Message broadcast to all connected users', 'system');
+                    }, 1000);
+                } else {
+                    setTimeout(() => {
+                        addMessage(`Acknowledged. Processing your request.`, 'received');
+                    }, 1000);
+                }
+            }
+        }
+
+        function addMessage(text, type) {
+            const content = document.getElementById('chatContent');
+            const div = document.createElement('div');
+            div.className = `chat-message ${type}`;
+            div.textContent = text;
+            content.appendChild(div);
+            content.scrollTop = content.scrollHeight;
+        }
+
+        function showEmergencyDialog() {
+            const emergencyMessage = prompt('Enter emergency message:');
+            if (emergencyMessage) {
+                broadcastEmergency(emergencyMessage);
+            }
+        }
+
+        function broadcastEmergency(message) {
+            // Add to notifications
+            addNotification(message, 'emergency');
+            
+            // Show emergency alert
+            showEmergencyAlert(message);
+            
+            // Add to emergency channel
+            const wasActive = activeContact;
+            const emergencyContact = contacts.find(c => c.type === 'emergency');
+            selectContact(emergencyContact);
+            addMessage(message, 'sent');
+            addMessage('Emergency broadcast sent to all connected vehicles and operators', 'system');
+            
+            // Simulate emergency responses
+            setTimeout(() => {
+                addMessage('Emergency services notified', 'received');
+                addMessage('All nearby vehicles have been alerted', 'received');
+                addMessage('Response team dispatched', 'received');
+            }, 1000);
+        }
+
+        function showEmergencyAlert(message) {
+            const alert = document.createElement('div');
+            alert.className = 'emergency-alert';
+            alert.innerHTML = `
+                <i class="fas fa-exclamation-triangle"></i>
+                <span>${message}</span>
+            `;
+            document.body.appendChild(alert);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 5000);
+        }
+
+        // Chatbot functions
+        function processChatbotMessage(message) {
+            message = message.toLowerCase();
+            
+            if (message.includes('hello') || message.includes('hi') || message.includes('hey')) {
+                addMessage('Hello! How can I assist you with the V2V system today?', 'bot');
+                showChatbotSuggestions(['Vehicle status', 'Traffic info', 'Weather updates']);
+            } 
+            else if (message.includes('vehicle') && (message.includes('status') || message.includes('info'))) {
+                addMessage('Here\'s the current vehicle status information:', 'bot');
+                const vehicleStatus = {
+                    activeVehicles: Math.floor(Math.random() * 100) + 50,
+                    avgSpeed: Math.floor(Math.random() * 60) + 40,
+                    alerts: Math.floor(Math.random() * 10)
+                };
+                addMessage(`Active vehicles: ${vehicleStatus.activeVehicles}\nAverage speed: ${vehicleStatus.avgSpeed} km/h\nActive alerts: ${vehicleStatus.alerts}`, 'bot');
+                showChatbotSuggestions(['Vehicle locations', 'Traffic info', 'More details']);
+            }
+            else if (message.includes('traffic')) {
+                addMessage('Current traffic information:', 'bot');
+                const trafficInfo = [
+                    'Heavy traffic on Highway 101',
+                    'Accident reported on Main Street',
+                    'Construction on 5th Avenue'
+                ];
+                addMessage(trafficInfo.join('\n'), 'bot');
+                showChatbotSuggestions(['Alternative routes', 'Traffic forecast', 'Report incident']);
+            }
+            else if (message.includes('weather')) {
+                addMessage('Current weather information:', 'bot');
+                const weather = {
+                    temp: Math.floor(Math.random() * 15) + 15,
+                    condition: 'Partly Cloudy',
+                    precipitation: Math.floor(Math.random() * 20),
+                    wind: Math.floor(Math.random() * 20) + 5
+                };
+                addMessage(`Temperature: ${weather.temp}°C\nCondition: ${weather.condition}\nPrecipitation: ${weather.precipitation}%\nWind: ${weather.wind} km/h`, 'bot');
+                showChatbotSuggestions(['Forecast', 'Weather alerts', 'Road conditions']);
+            }
+            else if (message.includes('emergency') || message.includes('help')) {
+                addMessage('Do you need to report an emergency?', 'bot');
+                showChatbotSuggestions(['Yes - Report Emergency', 'No - Just Information', 'Contact Operator']);
+            }
+            else if (message.includes('report emergency') || message.toLowerCase() === 'yes - report emergency') {
+                addMessage('Please describe the emergency situation briefly, and I\'ll notify the emergency response team immediately.', 'bot');
+            }
+            else if (message.includes('contact operator')) {
+                addMessage('Connecting you to an available operator...', 'bot');
+                setTimeout(() => {
+                    selectContact(contacts.find(c => c.type === 'operator' && c.status === 'online'));
+                }, 1500);
+            }
+            else if (message.includes('thank')) {
+                addMessage('You\'re welcome! Is there anything else I can help you with?', 'bot');
+                showChatbotSuggestions(['Yes', 'No, that\'s all']);
+            }
+            else if (message.toLowerCase() === 'no, that\'s all' || message === 'no') {
+                addMessage('Alright! Feel free to reach out if you need assistance later.', 'bot');
+            }
+            else {
+                addMessage('I\'m not sure I understand. Could you rephrase or select one of these options?', 'bot');
+                showChatbotSuggestions(['Vehicle status', 'Traffic info', 'Weather updates', 'Emergency help', 'Contact operator']);
+            }
+        }
+
+        function showTypingIndicator() {
+            const content = document.getElementById('chatContent');
+            const indicator = document.createElement('div');
+            indicator.className = 'typing-indicator';
+            indicator.id = 'typingIndicator';
+            indicator.innerHTML = '<span></span><span></span><span></span>';
+            content.appendChild(indicator);
+            content.scrollTop = content.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            const indicator = document.getElementById('typingIndicator');
+            if (indicator) {
+                indicator.remove();
+            }
+        }
+
+        function showChatbotSuggestions(suggestions) {
+            const content = document.getElementById('chatContent');
+            const container = document.createElement('div');
+            container.className = 'chatbot-suggestions-container';
+            
+            suggestions.forEach(suggestion => {
+                const button = document.createElement('div');
+                button.className = 'chatbot-suggestion';
+                button.textContent = suggestion;
+                button.onclick = () => {
+                    addMessage(suggestion, 'sent');
+                    
+                    showTypingIndicator();
+                    setTimeout(() => {
+                        hideTypingIndicator();
+                        processChatbotMessage(suggestion);
+                    }, 1000);
+                };
+                container.appendChild(button);
+            });
+            
+            content.appendChild(container);
+            content.scrollTop = content.scrollHeight;
+        }
+
+        // Initialize messaging system
+        window.addEventListener('load', () => {
+            initializeContacts();
+            // Select chatbot by default
+            selectContact(contacts[0]);
+        });
+
+        // Add message input event listener
+        document.getElementById('messageInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+    <link rel="manifest" href="manifest.json">
+</body>
+</html>
+

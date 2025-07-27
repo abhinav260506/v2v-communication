@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - V2V Communication System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(90deg, #007BFF, #0056b3);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 1.5em;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 20px;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: background-color 0.3s;
+        }
+
+        .nav-links a:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .profile-container {
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .profile-picture {
+            position: relative;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            overflow: hidden;
+        }
+
+        .profile-picture img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .profile-picture-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 8px;
+            text-align: center;
+            cursor: pointer;
+            color: white;
+            font-size: 12px;
+            transition: opacity 0.3s;
+            opacity: 0;
+        }
+
+        .profile-picture:hover .profile-picture-overlay {
+            opacity: 1;
+        }
+
+        .profile-info h2 {
+            margin: 0 0 10px 0;
+            color: #333;
+        }
+
+        .profile-info p {
+            margin: 0;
+            color: #666;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        .form-group input:focus {
+            border-color: #007BFF;
+            outline: none;
+            box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+        }
+
+        .submit-btn {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+
+        .submit-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .message {
+            display: none;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .success-message {
+            background-color: #e8f5e9;
+            color: #28a745;
+        }
+
+        .error-message {
+            background-color: #ffe6e6;
+            color: #dc3545;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .profile-picture {
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>User Profile</h1>
+        <div class="nav-links">
+            <a href="index.html">Home</a>
+            <a href="#" onclick="handleLogout()">Logout</a>
+        </div>
+    </div>
+
+    <div class="profile-container">
+        <div id="successMessage" class="message success-message"></div>
+        <div id="errorMessage" class="message error-message"></div>
+
+        <div class="profile-header">
+            <div class="profile-picture">
+                <img id="profileImage" src="https://via.placeholder.com/150" alt="Profile Picture">
+                <div class="profile-picture-overlay" onclick="document.getElementById('fileInput').click()">
+                    Change Picture
+                </div>
+                <input type="file" id="fileInput" accept="image/*" onchange="handleImageUpload(event)">
+            </div>
+            <div class="profile-info">
+                <h2 id="userFullName">Loading...</h2>
+                <p id="userEmail">Loading...</p>
+                <p>Member since: <span id="memberSince">Loading...</span></p>
+            </div>
+        </div>
+
+        <form id="profileForm" onsubmit="handleProfileUpdate(event)">
+            <div class="form-group">
+                <label for="fullName">Full Name</label>
+                <input type="text" id="fullName" required>
+            </div>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" required readonly>
+            </div>
+            <div class="form-group">
+                <label for="currentPassword">Current Password (required for changes)</label>
+                <input type="password" id="currentPassword" required>
+            </div>
+            <div class="form-group">
+                <label for="newPassword">New Password (leave blank if unchanged)</label>
+                <input type="password" id="newPassword" minlength="6">
+            </div>
+            <div class="form-group">
+                <label for="confirmNewPassword">Confirm New Password</label>
+                <input type="password" id="confirmNewPassword" minlength="6">
+            </div>
+            <button type="submit" class="submit-btn">Save Changes</button>
+        </form>
+    </div>
+
+    <script>
+        // Check authentication
+        function checkAuth() {
+            const currentUser = JSON.parse(localStorage.getItem('currentUser')) || JSON.parse(sessionStorage.getItem('currentUser'));
+            if (!currentUser) {
+                window.location.href = 'login.html';
+                return null;
+            }
+            return currentUser;
+        }
+
+        // Load user data
+        function loadUserData() {
+            const currentUser = checkAuth();
+            if (!currentUser) return;
+
+            document.getElementById('userFullName').textContent = currentUser.fullName;
+            document.getElementById('userEmail').textContent = currentUser.email;
+            document.getElementById('memberSince').textContent = new Date(currentUser.registeredDate).toLocaleDateString();
+            
+            // Form fields
+            document.getElementById('fullName').value = currentUser.fullName;
+            document.getElementById('email').value = currentUser.email;
+
+            // Load profile picture if exists
+            if (currentUser.profilePicture) {
+                document.getElementById('profileImage').src = currentUser.profilePicture;
+            }
+        }
+
+        // Handle profile picture upload
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const currentUser = checkAuth();
+                    if (!currentUser) return;
+
+                    // Update profile picture in UI
+                    document.getElementById('profileImage').src = e.target.result;
+
+                    // Update user data
+                    currentUser.profilePicture = e.target.result;
+                    updateUserData(currentUser);
+
+                    showMessage('Profile picture updated successfully!', true);
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // Handle profile update
+        async function handleProfileUpdate(event) {
+            event.preventDefault();
+            const currentUser = checkAuth();
+            if (!currentUser) return;
+
+            const fullName = document.getElementById('fullName').value;
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmNewPassword = document.getElementById('confirmNewPassword').value;
+
+            // Verify current password
+            if (currentPassword !== currentUser.password) {
+                showMessage('Current password is incorrect', false);
+                return;
+            }
+
+            // Check if new passwords match
+            if (newPassword && newPassword !== confirmNewPassword) {
+                showMessage('New passwords do not match', false);
+                return;
+            }
+
+            // Update user data
+            const updatedUser = {
+                ...currentUser,
+                fullName,
+                password: newPassword || currentUser.password,
+                lastUpdated: new Date().toISOString()
+            };
+
+            updateUserData(updatedUser);
+            showMessage('Profile updated successfully!', true);
+
+            // Clear password fields
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmNewPassword').value = '';
+        }
+
+        // Update user data in storage
+        function updateUserData(updatedUser) {
+            // Update in users array
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            const userIndex = users.findIndex(u => u.email === updatedUser.email);
+            if (userIndex !== -1) {
+                users[userIndex] = updatedUser;
+                localStorage.setItem('users', JSON.stringify(users));
+            }
+
+            // Update current user session
+            if (localStorage.getItem('currentUser')) {
+                localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+            }
+            if (sessionStorage.getItem('currentUser')) {
+                sessionStorage.setItem('currentUser', JSON.stringify(updatedUser));
+            }
+
+            // Reload user data in the UI
+            loadUserData();
+        }
+
+        function showMessage(message, isSuccess) {
+            const successMessage = document.getElementById('successMessage');
+            const errorMessage = document.getElementById('errorMessage');
+
+            if (isSuccess) {
+                successMessage.textContent = message;
+                successMessage.style.display = 'block';
+                errorMessage.style.display = 'none';
+            } else {
+                errorMessage.textContent = message;
+                errorMessage.style.display = 'block';
+                successMessage.style.display = 'none';
+            }
+
+            setTimeout(() => {
+                successMessage.style.display = 'none';
+                errorMessage.style.display = 'none';
+            }, 3000);
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('currentUser');
+            sessionStorage.removeItem('currentUser');
+            window.location.href = 'login.html';
+        }
+
+        // Load user data when page loads
+        loadUserData();
+    </script>
+</body>
+</html> 
